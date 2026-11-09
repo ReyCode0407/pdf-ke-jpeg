@@ -1,7 +1,7 @@
 @echo off
-echo === Build PDF to JPEG Studio (.exe) ===
+echo === Build PIXORA by Rey (.exe) ===
 pip install customtkinter pymupdf pillow pyinstaller
-pyinstaller --noconfirm --onefile --windowed --collect-all customtkinter --name "PDF2JPEG-Studio" pdf_to_jpeg.py
+pyinstaller --noconfirm --onefile --windowed --collect-all customtkinter --icon icon.ico --name PIXORA pixora.py
 echo.
-echo Selesai! File exe ada di folder: dist\PDF2JPEG-Studio.exe
+echo Selesai! File exe ada di folder: dist\PIXORA.exe
 pause
