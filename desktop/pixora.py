@@ -1,10 +1,11 @@
 """PIXORA by Rey - aplikasi pengolah PDF dan gambar.
 
 Fitur:
+  - PDF -> Word (.docx) memakai pdf2docx
   - PDF -> Gambar (JPEG, PNG, WebP), pilih halaman, resolusi, kualitas
   - Gambar -> PDF, urutan bisa diatur
 
-Dependensi: customtkinter, pymupdf, pillow
+Dependensi: customtkinter, pymupdf, pillow, pdf2docx
 """
 import os
 import sys
@@ -160,7 +161,7 @@ class App(ctk.CTk):
         bar = ctk.CTkFrame(self, fg_color="transparent")
         bar.pack(fill="x", padx=28, pady=(10, 10))
         self.tab_seg = ctk.CTkSegmentedButton(
-            bar, values=["PDF → Gambar", "Gambar → PDF"], command=self._show_tab, height=38, corner_radius=12,
+            bar, values=["PDF → Gambar", "Gambar → PDF", "PDF → Word"], command=self._show_tab, height=38, corner_radius=12,
             fg_color=SURFACE, selected_color=JPG_DEEP, selected_hover_color=JPG_DEEP,
             unselected_color=SURFACE, unselected_hover_color=FRAME, text_color=FG, font=font(14, "bold"))
         self.tab_seg.pack(side="left")
@@ -169,14 +170,17 @@ class App(ctk.CTk):
         self.body.pack(fill="both", expand=True, padx=28, pady=(0, 22))
         self.tab_pdf = ctk.CTkFrame(self.body, fg_color="transparent")
         self.tab_img = ctk.CTkFrame(self.body, fg_color="transparent")
+        self.tab_doc = ctk.CTkFrame(self.body, fg_color="transparent")
         self._build_pdf_tab(self.tab_pdf)
         self._build_img_tab(self.tab_img)
+        self._build_doc_tab(self.tab_doc)
 
     def _show_tab(self, name):
         self.tab_seg.set(name)
-        self.tab_pdf.pack_forget()
-        self.tab_img.pack_forget()
-        (self.tab_pdf if name == "PDF → Gambar" else self.tab_img).pack(fill="both", expand=True)
+        for t in (self.tab_pdf, self.tab_img, self.tab_doc):
+            t.pack_forget()
+        {"PDF → Gambar": self.tab_pdf, "Gambar → PDF": self.tab_img, "PDF → Word": self.tab_doc}[name].pack(
+            fill="both", expand=True)
 
     # ------------------------------------------------------------ tab 1: PDF -> Gambar
     def _build_pdf_tab(self, tab):
@@ -531,6 +535,161 @@ class App(ctk.CTk):
         finally:
             self.busy = False
             self.after(0, lambda: self.pdf_btn.configure(state="normal", text="Buat PDF"))
+
+    # ------------------------------------------------------------ tab 3: PDF -> Word
+    def _build_doc_tab(self, tab):
+        self.docs = []
+        tab.grid_columnconfigure(0, weight=1)
+        tab.grid_columnconfigure(1, weight=0, minsize=330)
+        tab.grid_rowconfigure(0, weight=1)
+
+        left = ctk.CTkFrame(tab, fg_color="transparent")
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 16))
+        left.grid_rowconfigure(0, weight=1)
+        left.grid_columnconfigure(0, weight=1)
+
+        fc = self.card(left)
+        fc.grid(row=0, column=0, sticky="nsew")
+        top = ctk.CTkFrame(fc, fg_color="transparent")
+        top.pack(fill="x", padx=18, pady=(16, 8))
+        self.label(top, "File PDF", 17, FG, "bold").pack(side="left")
+        self.btn(top, "Hapus semua", self.doc_clear, width=104).pack(side="right", padx=(8, 0))
+        self.btn(top, "+ Tambah PDF", self.doc_add, "primary", width=124).pack(side="right")
+        self.doc_box = ctk.CTkTextbox(fc, fg_color=INNER, corner_radius=12, text_color=FG, font=font(13), border_width=0)
+        self.doc_box.pack(fill="both", expand=True, padx=18, pady=(0, 12))
+        self.label(fc, "Tata letak, tabel, dan gambar dipertahankan semaksimal mungkin.\n"
+                       "PDF hasil pindai (berupa gambar) butuh OCR, yang belum tersedia.",
+                   12, MUTED, anchor="w", justify="left").pack(anchor="w", padx=18, pady=(0, 14))
+
+        oc = self.card(left)
+        oc.grid(row=1, column=0, sticky="ew", pady=(14, 0))
+        self.caption(oc, "Folder tujuan").pack(anchor="w", padx=18, pady=(14, 6))
+        orow = ctk.CTkFrame(oc, fg_color="transparent")
+        orow.pack(fill="x", padx=18, pady=(0, 16))
+        self.doc_out = ctk.CTkEntry(orow, height=36, fg_color=INNER, border_width=0, text_color=FG, font=font(13))
+        self.doc_out.pack(side="left", fill="x", expand=True)
+        self.doc_out.insert(0, os.path.join(os.path.expanduser("~"), "Documents", "PIXORA"))
+        self.btn(orow, "Pilih…", self.doc_choose_out, width=84, height=36).pack(side="left", padx=(8, 0))
+
+        rail = self.card(tab)
+        rail.grid(row=0, column=1, sticky="nsew")
+        ctk.CTkFrame(rail, height=4, fg_color=PDF_C, corner_radius=0).pack(fill="x")
+        inner = ctk.CTkFrame(rail, fg_color="transparent")
+        inner.pack(fill="both", expand=True, padx=20, pady=16)
+        self.label(inner, "Pengaturan Word", 18, FG, "bold", anchor="w").pack(anchor="w", pady=(0, 12))
+        self.caption(inner, "Halaman (kosong = semua)").pack(anchor="w")
+        self.doc_pages = ctk.CTkEntry(inner, height=36, placeholder_text="contoh: 1-3,5", fg_color=INNER,
+                                      border_width=0, text_color=FG, font=font(13))
+        self.doc_pages.pack(fill="x", pady=(6, 14))
+        self.doc_readout = self.label(inner, "Belum ada file.", 12, FG, mono=True, anchor="w", justify="left",
+                                      fg_color=FRAME, corner_radius=12)
+        self.doc_readout.pack(fill="x", ipady=10, pady=(0, 14))
+        self.doc_btn = self.btn(inner, "Konversi ke Word", self.doc_start, "primary", height=46)
+        self.doc_btn.configure(font=font(15, "bold"), corner_radius=14)
+        self.doc_btn.pack(fill="x")
+        self.doc_progress = ctk.CTkProgressBar(inner, height=8, progress_color=JPG_C, fg_color=FRAME)
+        self.doc_progress.set(0)
+        self.doc_progress.pack(fill="x", pady=(12, 6))
+        self.doc_status = self.label(inner, "Siap.", 12, MUTED, anchor="w", justify="left", wraplength=270)
+        self.doc_status.pack(anchor="w")
+        self.btn(inner, "📂  Buka folder hasil", self.doc_open).pack(fill="x", pady=(10, 0))
+        self.doc_refresh()
+
+    def doc_add(self):
+        for p in filedialog.askopenfilenames(title="Pilih PDF", filetypes=[("PDF", "*.pdf")]):
+            if p not in self.docs:
+                self.docs.append(p)
+        self.doc_refresh()
+
+    def doc_clear(self):
+        self.docs = []
+        self.doc_refresh()
+
+    def doc_refresh(self):
+        self.doc_box.configure(state="normal")
+        self.doc_box.delete("1.0", "end")
+        if self.docs:
+            self.doc_box.insert("end", "\n".join(f"•  {os.path.basename(p)}" for p in self.docs))
+        else:
+            self.doc_box.insert("end", "Belum ada file. Klik “+ Tambah PDF”.")
+        self.doc_box.configure(state="disabled")
+        self.doc_readout.configure(text=f"{len(self.docs)} file akan jadi .docx" if self.docs else "Belum ada file.")
+
+    def doc_choose_out(self):
+        d = filedialog.askdirectory(title="Pilih folder tujuan")
+        if d:
+            self.doc_out.delete(0, "end")
+            self.doc_out.insert(0, d)
+
+    def doc_open(self):
+        d = self.doc_out.get().strip()
+        if not os.path.isdir(d):
+            messagebox.showinfo("Info", "Folder belum ada. Lakukan konversi dulu.")
+            return
+        if sys.platform.startswith("win"):
+            os.startfile(d)  # noqa: S606
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", d])
+        else:
+            subprocess.Popen(["xdg-open", d])
+
+    def _doc_say(self, text, value=None, error=False):
+        def _do():
+            self.doc_status.configure(text=text, text_color=DANGER if error else MUTED)
+            if value is not None:
+                self.doc_progress.set(value)
+        self.after(0, _do)
+
+    def doc_start(self):
+        if self.busy:
+            return
+        if not self.docs:
+            messagebox.showwarning("Belum ada file", "Tambahkan minimal satu file PDF.")
+            return
+        out = self.doc_out.get().strip()
+        if not out:
+            messagebox.showwarning("Folder tujuan", "Pilih folder tujuan dulu.")
+            return
+        self.busy = True
+        self.doc_btn.configure(state="disabled", text="⏳  Memproses…")
+        threading.Thread(target=self._doc_work, args=(list(self.docs), out, self.doc_pages.get()), daemon=True).start()
+
+    def _doc_work(self, files, out, pages_text):
+        done, skipped = 0, []
+        try:
+            try:
+                from pdf2docx import Converter
+            except ImportError:
+                self._doc_say("Modul pdf2docx belum terpasang. Jalankan: pip install pdf2docx", 0, True)
+                return
+            os.makedirs(out, exist_ok=True)
+            for i, f in enumerate(files, start=1):
+                self._doc_say(f"File {i} dari {len(files)}: {os.path.basename(f)}…", (i - 1) / len(files))
+                with fitz.open(f) as d:
+                    total = d.page_count
+                    has_text = any(d[n].get_text().strip() for n in range(min(total, 5)))
+                    pages = parse_pages(pages_text, total)
+                if not has_text:
+                    skipped.append(os.path.basename(f))
+                    continue
+                dest = os.path.join(out, os.path.splitext(os.path.basename(f))[0] + ".docx")
+                cv = Converter(f)
+                try:
+                    cv.convert(dest, pages=pages if pages_text.strip() else None)
+                finally:
+                    cv.close()
+                done += 1
+            note = f" Dilewati karena tanpa teks: {', '.join(skipped)}." if skipped else ""
+            self._doc_say(f"Selesai ✅  {done} file tersimpan.{note}", 1.0)
+            if done:
+                self.after(0, lambda: messagebox.showinfo("Selesai", f"{done} file Word berhasil dibuat."))
+        except ValueError:
+            self._doc_say("Format halaman tidak valid. Contoh: 1-3,5", 0, True)
+        except Exception as e:  # noqa: BLE001
+            self._doc_say(f"Error: {e}", 0, True)
+        finally:
+            self.busy = False
+            self.after(0, lambda: self.doc_btn.configure(state="normal", text="Konversi ke Word"))
 
 
 if __name__ == "__main__":

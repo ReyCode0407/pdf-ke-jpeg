@@ -72,6 +72,12 @@ h1 .p{color:var(--pdf)} h1 .j{color:var(--jpg)} h1 .ar{color:var(--muted);font-w
 h1 .by{font:500 .2em var(--font-mono);letter-spacing:0;color:var(--muted);margin-left:.4em}
 .brand .by{font:500 12px var(--font-mono);color:var(--muted);margin-left:4px}
 [hidden]{display:none!important}
+.doclist{display:flex;flex-direction:column;gap:8px}
+.drow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.drow b{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:500}
+.check{display:flex;align-items:flex-start;gap:10px;font-size:14px;cursor:pointer}
+.check input{margin-top:4px;accent-color:var(--jpg)}
+.tabs{max-width:100%;overflow-x:auto}
 .tabs{display:inline-grid;grid-auto-flow:column;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:20px}
 .tab{border:0;background:transparent;border-radius:10px;padding:9px 20px;font:600 14px var(--font-body);transition:background .15s}
 .tab:hover{background:var(--frame)}
@@ -182,7 +188,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     <div>
       <h1><span class="p">PIX</span><span class="j">ORA</span><span class="by">by Rey</span></h1>
       <p class="lead">Aplikasi pengolah PDF dan gambar. Ubah halaman PDF jadi gambar yang tajam, atau gabungkan beberapa gambar jadi satu PDF. Semua diproses di perangkat Anda.</p>
-      <ul class="chips"><li>PDF → Gambar</li><li>Gambar → PDF</li><li>Full HD sampai 4K</li><li>JPEG · PNG · WebP</li></ul>
+      <ul class="chips"><li>PDF → Gambar</li><li>Gambar → PDF</li><li>PDF → Word</li><li>Full HD sampai 4K</li><li>JPEG · PNG · WebP</li></ul>
     </div>
     <svg class="art" viewBox="0 0 380 300" role="img" aria-label="Halaman PDF berubah menjadi gambar JPEG">
       <defs><clipPath id="clipL"><rect x="24" y="52" width="140" height="190" rx="10"/></clipPath></defs>
@@ -214,7 +220,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     </svg>
   </section>
 
-  <div class="tabs" role="group" aria-label="Pilih alat"><button type="button" class="tab" id="tabPdf" aria-pressed="true">PDF → Gambar</button><button type="button" class="tab" id="tabImg" aria-pressed="false">Gambar → PDF</button></div>
+  <div class="tabs" role="group" aria-label="Pilih alat"><button type="button" class="tab" id="tabPdf" aria-pressed="true">PDF → Gambar</button><button type="button" class="tab" id="tabImg" aria-pressed="false">Gambar → PDF</button><button type="button" class="tab" id="tabDoc" aria-pressed="false">PDF → Word</button></div>
 
   <div class="workspace" id="wsPdf">
     <div class="main">
@@ -281,6 +287,30 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       <div class="status" id="status2" role="status" aria-live="polite"></div>
     </aside>
   </div>
+
+  <div class="workspace" id="wsDoc" hidden>
+    <div class="main">
+      <label class="drop" id="dropDoc">
+        <input type="file" id="pickDoc" accept="application/pdf,.pdf" multiple>
+        <span class="drop-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
+        <strong>Seret PDF ke sini</strong>
+        <small>atau klik untuk memilih file. Hasilnya dokumen Word (.docx) yang bisa diedit.</small>
+      </label>
+      <section class="file" id="docBox" hidden>
+        <div class="file-h"><div class="file-t"><h2>File PDF</h2><p class="mono" id="docMeta"></p></div>
+          <div class="file-a"><button class="btn" id="docClear" type="button">Hapus semua</button></div></div>
+        <div class="doclist" id="docList"></div>
+      </section>
+      <p class="note">Yang dibawa ke Word adalah teksnya: judul, paragraf, dan jeda halaman. Tabel, gambar, dan tata letak kolom tidak ikut. PDF hasil pindai (berupa gambar) tidak punya teks dan butuh OCR, yang belum tersedia.</p>
+    </div>
+    <aside class="rail">
+      <h2>Pengaturan Word</h2>
+      <label class="check"><input type="checkbox" id="mergeLines" checked><span>Gabungkan baris menjadi paragraf<br><span class="mono">Matikan jika hasilnya salah gabung.</span></span></label>
+      <div class="readout" id="docReadout">Belum ada file.</div>
+      <button class="btn primary convert" id="makeDoc" type="button" disabled>Konversi ke Word</button>
+      <div class="status" id="status3" role="status" aria-live="polite"></div>
+    </aside>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -300,15 +330,16 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     const s = state.res === 'dpi300' ? 300 / 72 : Math.max(+state.res / long, 150 / 72);
     return Math.min(s, MAX_DIM / long);
   }
-  function updateHero(){ document.body.classList.toggle('has-files', state.files.length > 0 || imgs.length > 0); }
+  function updateHero(){ document.body.classList.toggle('has-files', state.files.length > 0 || imgs.length > 0 || docs.length > 0); }
 
   const state = { files: [], res: '1920', quality: 95, fmt: 'jpg', tab: 'pdf', psize: 'fit', busy: false, results: [] };
   const imgs = [];
+  const docs = [];
   const FMT = { jpg: { mime: 'image/jpeg', ext: 'jpg', label: 'JPEG', q: true }, png: { mime: 'image/png', ext: 'png', label: 'PNG', q: false }, webp: { mime: 'image/webp', ext: 'webp', label: 'WebP', q: true } };
   let uid = 0, downloads = null;
 
   const statusEl = $('#status');
-  function say(msg, err){ [statusEl, $('#status2')].forEach(el => { if (!el) return; el.textContent = msg || ''; el.classList.toggle('err', !!err); }); }
+  function say(msg, err){ [statusEl, $('#status2'), $('#status3')].forEach(el => { if (!el) return; el.textContent = msg || ''; el.classList.toggle('err', !!err); }); }
 
   if (!window.pdfjsLib) { say('Pustaka PDF gagal dimuat. Muat ulang halaman.', true); return; }
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -353,6 +384,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     e.preventDefault();
     const fl = [...e.dataTransfer.files];
     if (state.tab === 'img') { if (!$('#dropImg').contains(e.target)) addImgs(fl); }
+    else if (state.tab === 'doc') { if (!$('#dropDoc').contains(e.target)) addDocs(fl); }
     else if (!drop.contains(e.target)) addFiles(fl);
   });
 
@@ -589,12 +621,13 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   /* ---------- tab ---------- */
   function setTab(t){
     state.tab = t;
-    $('#wsPdf').hidden = t !== 'pdf'; $('#wsImg').hidden = t !== 'img';
-    $('#tabPdf').setAttribute('aria-pressed', t === 'pdf'); $('#tabImg').setAttribute('aria-pressed', t === 'img');
+    $('#wsPdf').hidden = t !== 'pdf'; $('#wsImg').hidden = t !== 'img'; $('#wsDoc').hidden = t !== 'doc';
+    $('#tabPdf').setAttribute('aria-pressed', t === 'pdf'); $('#tabImg').setAttribute('aria-pressed', t === 'img'); $('#tabDoc').setAttribute('aria-pressed', t === 'doc');
     say('');
   }
   $('#tabPdf').addEventListener('click', () => setTab('pdf'));
   $('#tabImg').addEventListener('click', () => setTab('img'));
+  $('#tabDoc').addEventListener('click', () => setTab('doc'));
 
   /* ---------- Gambar -> PDF ---------- */
   function addImgs(list){
@@ -667,6 +700,126 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       await save('PIXORA.pdf', doc.output('blob'));
     } catch (err){ say('Gagal membuat PDF: ' + (err && err.message ? err.message : 'terjadi kesalahan'), true); }
     finally { state.busy = false; $('#makePdf').textContent = 'Buat PDF'; $('#makePdf').disabled = !imgs.length; }
+  });
+
+  /* ---------- PDF -> Word (teks yang bisa diedit, .docx dibuat langsung di browser) ---------- */
+  async function addDocs(list){
+    for (const f of list){
+      if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)) { say('"' + f.name + '" bukan file PDF.', true); continue; }
+      try {
+        const d = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+        docs.push({ id: ++uid, name: f.name, file: f, n: d.numPages }); d.destroy();
+      } catch (e) { say('Tidak bisa membaca "' + f.name + '". File rusak atau dikunci kata sandi.', true); }
+    }
+    renderDocs();
+  }
+  function renderDocs(){
+    $('#docBox').hidden = !docs.length;
+    $('#docList').innerHTML = docs.map((d, i) => '<div class="drow"><b>' + esc(d.name) + '</b><span class="mono">' + d.n + ' hal.</span><button class="btn" type="button" data-di="' + i + '">Hapus</button></div>').join('');
+    $('#docMeta').textContent = docs.length + ' file';
+    $('#docReadout').textContent = docs.length ? (docs.length > 1 ? docs.length + ' file, hasilnya ZIP berisi .docx' : '1 file, hasilnya satu .docx') : 'Belum ada file.';
+    $('#makeDoc').disabled = !docs.length || state.busy;
+    updateHero();
+  }
+  $('#pickDoc').addEventListener('change', e => { addDocs([...e.target.files]); e.target.value = ''; });
+  const dropDoc = $('#dropDoc');
+  ['dragenter','dragover'].forEach(t => dropDoc.addEventListener(t, e => { e.preventDefault(); dropDoc.classList.add('over'); }));
+  ['dragleave','drop'].forEach(t => dropDoc.addEventListener(t, e => { e.preventDefault(); dropDoc.classList.remove('over'); }));
+  dropDoc.addEventListener('drop', e => addDocs([...e.dataTransfer.files]));
+  $('#docList').addEventListener('click', e => { const b = e.target.closest('[data-di]'); if (!b) return; docs.splice(+b.dataset.di, 1); renderDocs(); });
+  $('#docClear').addEventListener('click', () => { docs.length = 0; renderDocs(); });
+
+  async function extractText(file, merge){
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const out = { paras: [], pt: { w: 595, h: 842 }, chars: 0 };
+    const weight = {};
+    for (let p = 1; p <= pdf.numPages; p++){
+      const page = await pdf.getPage(p);
+      if (p === 1){ const v = page.getViewport({ scale: 1 }); out.pt = { w: v.width, h: v.height }; }
+      const tc = await page.getTextContent();
+      const items = tc.items.filter(it => it.str && it.str.length).map(it => ({
+        s: it.str, x: it.transform[4], y: it.transform[5], w: it.width || 0, sz: Math.abs(it.transform[3]) || it.height || 10 }));
+      items.sort((a, b) => b.y - a.y || a.x - b.x);
+      const lines = [];
+      for (const it of items){
+        const ln = lines[lines.length - 1];
+        if (ln && Math.abs(ln.y - it.y) <= Math.max(2, ln.sz * .5)) { ln.items.push(it); ln.sz = Math.max(ln.sz, it.sz); }
+        else lines.push({ y: it.y, sz: it.sz, items: [it] });
+      }
+      let prev = null, first = true;
+      for (const ln of lines){
+        ln.items.sort((a, b) => a.x - b.x);
+        let t = '', end = null;
+        for (const it of ln.items){
+          if (end !== null){
+            const gap = it.x - end;
+            if (gap > ln.sz * 3) t += '\t';
+            else if (gap > ln.sz * .2 && !/\s$/.test(t) && !/^\s/.test(it.s)) t += ' ';
+          }
+          t += it.s; end = it.x + it.w;
+        }
+        t = t.replace(/[ ]+$/,'').replace(/^[ ]+/,'');
+        if (!t.replace(/\t/g,'').trim()) continue;
+        const sz = Math.round(ln.sz * 2) / 2;
+        out.chars += t.length; weight[sz] = (weight[sz] || 0) + t.length;
+        const joinable = merge && prev && !prev.heading && Math.abs(prev.sz - sz) < 1 && (prev.y - ln.y) <= sz * 1.7 && (prev.y - ln.y) > 0
+          && !/\t/.test(prev.text) && !/\t/.test(t) && !/^([••\-–*]|\d+[.)])\s/.test(t);
+        if (joinable){ prev.text += ' ' + t; prev.y = ln.y; }
+        else { prev = { text: t, sz, y: ln.y, page: p, first }; out.paras.push(prev); first = false; }
+      }
+    }
+    pdf.destroy();
+    let body = 11, best = 0;
+    for (const k in weight) if (weight[k] > best){ best = weight[k]; body = +k; }
+    out.body = body;
+    out.paras.forEach(pr => { pr.heading = pr.sz >= body * 1.2 && pr.text.length < 140; });
+    return out;
+  }
+
+  function docxBlob(res){
+    const xe = x => String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const bodyPt = Math.min(12, Math.max(9, res.body));
+    let xml = '';
+    for (const pr of res.paras){
+      const sz = pr.heading ? Math.round(Math.min(28, Math.max(bodyPt * 1.15, pr.sz)) * 2) : Math.round(bodyPt * 2);
+      const ppr = (pr.first && pr.page > 1 ? '<w:pageBreakBefore/>' : '') + '<w:spacing w:after="' + (pr.heading ? 120 : 140) + '"/>';
+      const rpr = '<w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>' + (pr.heading ? '<w:b/>' : '') + '<w:sz w:val="' + sz + '"/></w:rPr>';
+      const runs = pr.text.split('\t').map((seg, k) => (k ? '<w:r>' + rpr + '<w:tab/></w:r>' : '') + '<w:r>' + rpr + '<w:t xml:space="preserve">' + xe(seg) + '</w:t></w:r>').join('');
+      xml += '<w:p><w:pPr>' + ppr + '</w:pPr>' + runs + '</w:p>';
+    }
+    const W = Math.round(res.pt.w * 20), H = Math.round(res.pt.h * 20);
+    const head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    const z = new JSZip();
+    z.file('[Content_Types].xml', head + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+    z.file('_rels/.rels', head + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file('word/document.xml', head + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + xml +
+      '<w:sectPr><w:pgSz w:w="' + W + '" w:h="' + H + '"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>');
+    return z.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+  }
+
+  $('#makeDoc').addEventListener('click', async () => {
+    if (!docs.length || state.busy) return;
+    if (!window.JSZip){ say('Pustaka ZIP gagal dimuat. Muat ulang halaman.', true); return; }
+    if (!downloads){ say('Penyimpanan file tidak tersedia di tampilan ini.', true); return; }
+    state.busy = true; $('#makeDoc').disabled = true; $('#makeDoc').textContent = 'Memproses…';
+    const made = [], skipped = [];
+    try {
+      for (let i = 0; i < docs.length; i++){
+        say('File ' + (i + 1) + ' dari ' + docs.length + ': ' + docs[i].name + '…');
+        const res = await extractText(docs[i].file, $('#mergeLines').checked);
+        if (res.chars < 20) { skipped.push(docs[i].name); continue; }
+        made.push({ name: docs[i].name.replace(/\.pdf$/i, '') + '.docx', blob: await docxBlob(res) });
+      }
+      if (!made.length) { say('Tidak ada teks yang bisa diambil. PDF ini kemungkinan hasil pindai dan butuh OCR.', true); return; }
+      const note = skipped.length ? ' (dilewati karena tanpa teks: ' + skipped.join(', ') + ')' : '';
+      if (made.length === 1) await save(made[0].name, made[0].blob);
+      else {
+        const z = new JSZip(); made.forEach(m => z.file(m.name, m.blob));
+        await save('pixora-word.zip', await z.generateAsync({ type: 'blob', compression: 'STORE' }));
+      }
+      if (note) say('Selesai' + note);
+    } catch (err){ say('Gagal membuat Word: ' + (err && err.message ? err.message : 'terjadi kesalahan'), true); }
+    finally { state.busy = false; $('#makeDoc').textContent = 'Konversi ke Word'; $('#makeDoc').disabled = !docs.length; }
   });
 })();
 </script>

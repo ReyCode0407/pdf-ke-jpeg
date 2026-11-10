@@ -4,6 +4,7 @@ Aplikasi pengolah PDF dan gambar.
 
 - **PDF → Gambar:** ubah halaman PDF jadi JPEG, PNG, atau WebP. Pilih halaman, resolusi, dan kualitas.
 - **Gambar → PDF:** gabungkan beberapa gambar jadi satu PDF dengan urutan yang bisa diatur.
+- **PDF → Word:** ubah PDF jadi dokumen Word (.docx) yang bisa diedit. Versi desktop memakai pdf2docx, versi web mengambil teksnya saja.
 
 Ada dua versi:
 
