@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PDF ke JPEG</title>
+<title>PIXORA by Rey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -69,6 +69,13 @@ h1 .p{color:var(--pdf)} h1 .j{color:var(--jpg)} h1 .ar{color:var(--muted);font-w
 @keyframes scan{0%{transform:translateY(0);opacity:0}12%{opacity:.85}88%{opacity:.85}100%{transform:translateY(186px);opacity:0}}
 @keyframes dash{to{stroke-dashoffset:-24}}
 @media (prefers-reduced-motion:reduce){.art .scan,.art .flow{animation:none}}
+h1 .by{font:500 .2em var(--font-mono);letter-spacing:0;color:var(--muted);margin-left:.4em}
+.brand .by{font:500 12px var(--font-mono);color:var(--muted);margin-left:4px}
+[hidden]{display:none!important}
+.tabs{display:inline-grid;grid-auto-flow:column;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:20px}
+.tab{border:0;background:transparent;border-radius:10px;padding:9px 20px;font:600 14px var(--font-body);transition:background .15s}
+.tab:hover{background:var(--frame)}
+.tab[aria-pressed="true"]{background:var(--jpg);color:var(--on-grad)}
 .has-files .hero{grid-template-columns:minmax(0,1fr);margin-bottom:20px}
 .has-files h1{font-size:clamp(34px,5vw,48px)}
 .has-files .art,.has-files .lead,.has-files .chips{display:none}
@@ -166,16 +173,16 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   <header class="nav">
     <div class="brand">
       <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--pdf)"/><stop offset="1" style="stop-color:var(--jpg)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M11 8h7l4 4v12H11z" fill="none" stroke="var(--on-grad)" stroke-width="2" stroke-linejoin="round"/><path d="M14 19l2-2 2 2 2-3" fill="none" stroke="var(--on-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>PDF ke JPEG</span>
+      <span>PIXORA <small class="by">by Rey</small></span>
     </div>
     <div class="privacy"><i></i>Diproses di browser · tanpa unggah</div>
   </header>
 
   <section class="hero">
     <div>
-      <h1><span class="p">PDF</span><span class="ar">→</span><span class="j">JPEG</span></h1>
-      <p class="lead">Ubah tiap halaman PDF menjadi gambar yang tajam. Pilih halaman, atur urutan, lalu simpan satu per satu atau sekaligus dalam ZIP.</p>
-      <ul class="chips"><li>JPEG · PNG · WebP</li><li>72–300 DPI</li><li>Urutkan halaman</li><li>Unduh ZIP</li></ul>
+      <h1><span class="p">PIX</span><span class="j">ORA</span><span class="by">by Rey</span></h1>
+      <p class="lead">Aplikasi pengolah PDF dan gambar. Ubah halaman PDF jadi gambar yang tajam, atau gabungkan beberapa gambar jadi satu PDF. Semua diproses di perangkat Anda.</p>
+      <ul class="chips"><li>PDF → Gambar</li><li>Gambar → PDF</li><li>Full HD sampai 4K</li><li>JPEG · PNG · WebP</li></ul>
     </div>
     <svg class="art" viewBox="0 0 380 300" role="img" aria-label="Halaman PDF berubah menjadi gambar JPEG">
       <defs><clipPath id="clipL"><rect x="24" y="52" width="140" height="190" rx="10"/></clipPath></defs>
@@ -207,7 +214,9 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     </svg>
   </section>
 
-  <div class="workspace">
+  <div class="tabs" role="group" aria-label="Pilih alat"><button type="button" class="tab" id="tabPdf" aria-pressed="true">PDF → Gambar</button><button type="button" class="tab" id="tabImg" aria-pressed="false">Gambar → PDF</button></div>
+
+  <div class="workspace" id="wsPdf">
     <div class="main">
       <label class="drop" id="drop">
         <input type="file" id="pick" accept="application/pdf,.pdf" multiple>
@@ -231,17 +240,17 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       <h2>Pengaturan</h2>
       <div class="field"><span class="lb">Format</span><div class="seg" id="fmt" style="grid-template-columns:repeat(3,1fr)" role="group" aria-label="Format gambar"><button type="button" data-v="jpg" aria-pressed="true">JPEG</button><button type="button" data-v="png" aria-pressed="false">PNG</button><button type="button" data-v="webp" aria-pressed="false">WebP</button></div></div>
       <div class="field">
-        <span class="lb">Resolusi (DPI)</span>
-        <div class="seg" id="dpi" role="group" aria-label="Resolusi DPI">
-          <button type="button" data-v="72" aria-pressed="false">72</button>
-          <button type="button" data-v="150" aria-pressed="true">150</button>
-          <button type="button" data-v="200" aria-pressed="false">200</button>
-          <button type="button" data-v="300" aria-pressed="false">300</button>
+        <span class="lb">Resolusi</span>
+        <div class="seg" id="dpi" role="group" aria-label="Resolusi">
+          <button type="button" data-v="1920" aria-pressed="true">Full HD</button>
+          <button type="button" data-v="2560" aria-pressed="false">2K</button>
+          <button type="button" data-v="3840" aria-pressed="false">4K</button>
+          <button type="button" data-v="dpi300" aria-pressed="false">300 DPI</button>
         </div>
       </div>
       <div class="field">
-        <label for="q">Kualitas <span id="qv">90</span></label>
-        <input type="range" id="q" min="40" max="100" value="90">
+        <label for="q">Kualitas <span id="qv">95</span></label>
+        <input type="range" id="q" min="40" max="100" value="95">
       </div>
       <div class="readout" id="readout">Belum ada halaman dipilih.</div>
       <button class="btn primary convert" id="go" type="button" disabled>Konversi ke JPEG</button>
@@ -249,11 +258,35 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       <div class="status" id="status" role="status" aria-live="polite"></div>
     </aside>
   </div>
+
+  <div class="workspace" id="wsImg" hidden>
+    <div class="main">
+      <label class="drop" id="dropImg">
+        <input type="file" id="pickImg" accept="image/*" multiple>
+        <span class="drop-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
+        <strong>Seret gambar ke sini</strong>
+        <small>atau klik untuk memilih. JPG, PNG, atau WebP, bisa banyak sekaligus.</small>
+      </label>
+      <section class="file" id="imgBox" hidden>
+        <div class="file-h"><div class="file-t"><h2>Gambar</h2><p class="mono" id="imgMeta"></p></div>
+          <div class="file-a"><button class="btn" id="imgClear" type="button">Hapus semua</button></div></div>
+        <div class="frames" id="imgFrames"></div>
+      </section>
+    </div>
+    <aside class="rail">
+      <h2>Pengaturan PDF</h2>
+      <div class="field"><span class="lb">Ukuran halaman</span><div class="seg" id="psize" style="grid-template-columns:repeat(2,1fr)" role="group" aria-label="Ukuran halaman"><button type="button" data-v="fit" aria-pressed="true">Sesuai gambar</button><button type="button" data-v="a4" aria-pressed="false">A4</button></div></div>
+      <div class="readout" id="imgReadout">Belum ada gambar.</div>
+      <button class="btn primary convert" id="makePdf" type="button" disabled>Buat PDF</button>
+      <div class="status" id="status2" role="status" aria-live="polite"></div>
+    </aside>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
   const $ = s => document.querySelector(s);
@@ -261,13 +294,21 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   const pad = n => String(n).padStart(3,'0');
   const fmtKB = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB';
   const MAX_DIM = 12000;
+  /* Sisi terpanjang minimal sesuai pilihan (Full HD = 1920 px) dan tidak pernah di bawah 150 DPI. */
+  function scaleFor(w, h){
+    const long = Math.max(w, h);
+    const s = state.res === 'dpi300' ? 300 / 72 : Math.max(+state.res / long, 150 / 72);
+    return Math.min(s, MAX_DIM / long);
+  }
+  function updateHero(){ document.body.classList.toggle('has-files', state.files.length > 0 || imgs.length > 0); }
 
-  const state = { files: [], dpi: 150, quality: 90, fmt: 'jpg', busy: false, results: [] };
+  const state = { files: [], res: '1920', quality: 95, fmt: 'jpg', tab: 'pdf', psize: 'fit', busy: false, results: [] };
+  const imgs = [];
   const FMT = { jpg: { mime: 'image/jpeg', ext: 'jpg', label: 'JPEG', q: true }, png: { mime: 'image/png', ext: 'png', label: 'PNG', q: false }, webp: { mime: 'image/webp', ext: 'webp', label: 'WebP', q: true } };
   let uid = 0, downloads = null;
 
   const statusEl = $('#status');
-  function say(msg, err){ statusEl.textContent = msg || ''; statusEl.classList.toggle('err', !!err); }
+  function say(msg, err){ [statusEl, $('#status2')].forEach(el => { if (!el) return; el.textContent = msg || ''; el.classList.toggle('err', !!err); }); }
 
   if (!window.pdfjsLib) { say('Pustaka PDF gagal dimuat. Muat ulang halaman.', true); return; }
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -308,7 +349,12 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   ['dragleave','drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
   window.addEventListener('dragover', e => e.preventDefault());
-  window.addEventListener('drop', e => { e.preventDefault(); if (!drop.contains(e.target)) addFiles([...e.dataTransfer.files]); });
+  window.addEventListener('drop', e => {
+    e.preventDefault();
+    const fl = [...e.dataTransfer.files];
+    if (state.tab === 'img') { if (!$('#dropImg').contains(e.target)) addImgs(fl); }
+    else if (!drop.contains(e.target)) addFiles(fl);
+  });
 
   /* ---------- sample PDF (built in code, A4, 3 pages) ---------- */
   function samplePdf(){
@@ -391,7 +437,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       sec.querySelectorAll('.frame').forEach(fr => io.observe(fr));
     });
     drop.classList.toggle('compact', state.files.length > 0);
-    document.body.classList.toggle('has-files', state.files.length > 0);
+    updateHero();
     drop.querySelector('strong').textContent = state.files.length ? 'Tambah PDF lain' : 'Seret PDF ke sini';
     drop.querySelector('small').hidden = state.files.length > 0;
     $('#sample').hidden = state.files.length > 0;
@@ -409,7 +455,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     const ro = $('#readout');
     if (!total || !first) ro.textContent = 'Belum ada halaman dipilih.';
     else {
-      const k = state.dpi / 72;
+      const k = scaleFor(first.pt.w, first.pt.h);
       ro.innerHTML = total + ' halaman dipilih<br>≈ ' + Math.round(first.pt.w * k) + ' × ' + Math.round(first.pt.h * k) + ' px per halaman';
     }
     $('#go').disabled = !total || state.busy;
@@ -468,7 +514,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
 
   $('#dpi').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
-    state.dpi = +b.dataset.v;
+    state.res = b.dataset.v;
     $('#dpi').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
     refresh();
   });
@@ -490,7 +536,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
         say('Halaman ' + (i + 1) + ' dari ' + jobs.length + '…');
         const page = await f.doc.getPage(p);
         const v0 = page.getViewport({ scale: 1 });
-        const scale = Math.min(state.dpi / 72, MAX_DIM / Math.max(v0.width, v0.height));
+        const scale = scaleFor(v0.width, v0.height);
         const vp = page.getViewport({ scale });
         const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);
@@ -538,6 +584,89 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     state.results.forEach(r => z.file(r.name, r.blob));
     const blob = await z.generateAsync({ type: 'blob', compression: 'STORE' });
     save('hasil-konversi.zip', blob);
+  });
+
+  /* ---------- tab ---------- */
+  function setTab(t){
+    state.tab = t;
+    $('#wsPdf').hidden = t !== 'pdf'; $('#wsImg').hidden = t !== 'img';
+    $('#tabPdf').setAttribute('aria-pressed', t === 'pdf'); $('#tabImg').setAttribute('aria-pressed', t === 'img');
+    say('');
+  }
+  $('#tabPdf').addEventListener('click', () => setTab('pdf'));
+  $('#tabImg').addEventListener('click', () => setTab('img'));
+
+  /* ---------- Gambar -> PDF ---------- */
+  function addImgs(list){
+    list.forEach(f => {
+      if (!/^image\//.test(f.type)) return;
+      imgs.push({ id: ++uid, name: f.name, file: f, url: URL.createObjectURL(f) });
+    });
+    renderImgs();
+  }
+  $('#pickImg').addEventListener('change', e => { addImgs([...e.target.files]); e.target.value = ''; });
+  const dropImg = $('#dropImg');
+  ['dragenter','dragover'].forEach(t => dropImg.addEventListener(t, e => { e.preventDefault(); dropImg.classList.add('over'); }));
+  ['dragleave','drop'].forEach(t => dropImg.addEventListener(t, e => { e.preventDefault(); dropImg.classList.remove('over'); }));
+  dropImg.addEventListener('drop', e => addImgs([...e.dataTransfer.files]));
+
+  function renderImgs(){
+    const n = imgs.length;
+    $('#imgBox').hidden = n === 0;
+    $('#imgFrames').innerHTML = imgs.map((m, i) =>
+      '<div class="cell" style="cursor:default" data-i="' + i + '"><div class="frame"><span class="pg"><img src="' + m.url + '" alt="' + esc(m.name) + '"></span>' +
+      '<span class="no">H ' + pad(i + 1) + '</span></div><div class="mv">' +
+      '<button type="button" data-mi="-1" aria-label="Geser ke kiri"' + (i === 0 ? ' disabled' : '') + '>◀</button>' +
+      '<button type="button" data-del="1" aria-label="Hapus gambar">✕</button>' +
+      '<button type="button" data-mi="1" aria-label="Geser ke kanan"' + (i === n - 1 ? ' disabled' : '') + '>▶</button></div></div>').join('');
+    $('#imgMeta').textContent = n + ' gambar · urutan di sini menjadi urutan halaman';
+    $('#imgReadout').textContent = n ? n + ' gambar akan jadi ' + n + ' halaman.' : 'Belum ada gambar.';
+    $('#makePdf').disabled = !n || state.busy;
+    updateHero();
+  }
+  $('#imgFrames').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const i = +b.closest('.cell').dataset.i;
+    if (b.dataset.del){ URL.revokeObjectURL(imgs[i].url); imgs.splice(i, 1); }
+    else { const j = i + +b.dataset.mi; if (j < 0 || j >= imgs.length) return; [imgs[i], imgs[j]] = [imgs[j], imgs[i]]; }
+    renderImgs();
+  });
+  $('#imgClear').addEventListener('click', () => { imgs.forEach(m => URL.revokeObjectURL(m.url)); imgs.length = 0; renderImgs(); });
+  $('#psize').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    state.psize = b.dataset.v;
+    $('#psize').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  });
+
+  $('#makePdf').addEventListener('click', async () => {
+    if (!imgs.length || state.busy) return;
+    if (!window.jspdf){ say('Pustaka PDF gagal dimuat. Muat ulang halaman.', true); return; }
+    if (!downloads){ say('Penyimpanan file tidak tersedia di tampilan ini.', true); return; }
+    state.busy = true; $('#makePdf').disabled = true; $('#makePdf').textContent = 'Memproses…';
+    try {
+      const { jsPDF } = window.jspdf; const a4 = state.psize === 'a4'; let doc = null;
+      for (let i = 0; i < imgs.length; i++){
+        say('Gambar ' + (i + 1) + ' dari ' + imgs.length + '…');
+        const bmp = await createImageBitmap(imgs[i].file);
+        const k = Math.min(1, 4096 / Math.max(bmp.width, bmp.height));
+        const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(bmp, 0, 0, w, h);
+        if (bmp.close) bmp.close();
+        const data = c.toDataURL('image/jpeg', .95);
+        let pw, ph, x = 0, y = 0, iw, ih;
+        if (a4){ pw = 595.28; ph = 841.89; const m = 36, s = Math.min((pw - 2 * m) / w, (ph - 2 * m) / h); iw = w * s; ih = h * s; x = (pw - iw) / 2; y = (ph - ih) / 2; }
+        else { pw = w * .48; ph = h * .48; iw = pw; ih = ph; }
+        const o = pw > ph ? 'l' : 'p';
+        if (!doc) doc = new jsPDF({ unit: 'pt', format: [pw, ph], orientation: o, compress: true }); else doc.addPage([pw, ph], o);
+        doc.addImage(data, 'JPEG', x, y, iw, ih, undefined, 'FAST');
+        c.width = c.height = 0;
+        await new Promise(r => setTimeout(r));
+      }
+      say('Membuat PDF…');
+      await save('PIXORA.pdf', doc.output('blob'));
+    } catch (err){ say('Gagal membuat PDF: ' + (err && err.message ? err.message : 'terjadi kesalahan'), true); }
+    finally { state.busy = false; $('#makePdf').textContent = 'Buat PDF'; $('#makePdf').disabled = !imgs.length; }
   });
 })();
 </script>

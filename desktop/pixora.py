@@ -37,6 +37,8 @@ DARK = "#06110F"
 DANGER = "#FF8A80"
 
 MAX_DIM = 12000
+# Sisi terpanjang minimal sesuai pilihan (Full HD = 1920 px), dan tidak pernah di bawah 150 DPI
+RES = {"Full HD": 1920, "2K": 2560, "4K": 3840, "300 DPI": None}
 IMG_TYPES = [("Gambar", "*.jpg *.jpeg *.png *.webp *.bmp *.tif *.tiff"), ("Semua file", "*.*")]
 FORMATS = {"JPEG": ("JPEG", "jpg"), "PNG": ("PNG", "png"), "WebP": ("WEBP", "webp")}
 
@@ -46,6 +48,13 @@ ctk.set_default_color_theme("blue")
 
 def font(size, weight="normal", mono=False):
     return ctk.CTkFont(family="Consolas" if mono else "Segoe UI", size=size, weight=weight)
+
+
+def scale_for(w, h, res):
+    long_side = max(w, h)
+    target = RES[res]
+    s = 300 / 72 if target is None else max(target / long_side, 150 / 72)
+    return min(s, MAX_DIM / long_side)
 
 
 def parse_pages(text, total):
@@ -226,20 +235,20 @@ class App(ctk.CTk):
         self.fmt_seg.configure(command=self._fmt_changed)
         self.fmt_seg.pack(fill="x", pady=(6, 14))
 
-        self.caption(inner, "Resolusi (DPI)").pack(anchor="w")
-        self.dpi_seg = self.seg(inner, ["72", "150", "200", "300"], command=lambda _v: self.update_readout())
-        self.dpi_seg.set("150")
-        self.dpi_seg.pack(fill="x", pady=(6, 14))
+        self.caption(inner, "Resolusi").pack(anchor="w")
+        self.res_seg = self.seg(inner, list(RES), command=lambda _v: self.update_readout())
+        self.res_seg.set("Full HD")
+        self.res_seg.pack(fill="x", pady=(6, 14))
 
         qrow = ctk.CTkFrame(inner, fg_color="transparent")
         qrow.pack(fill="x")
         self.caption(qrow, "Kualitas").pack(side="left")
-        self.q_label = self.label(qrow, "90", 12, FG, mono=True)
+        self.q_label = self.label(qrow, "95", 12, FG, mono=True)
         self.q_label.pack(side="right")
         self.q_slider = ctk.CTkSlider(inner, from_=40, to=100, number_of_steps=60, button_color=JPG_C,
                                       button_hover_color=JPG_HOVER, progress_color=JPG_C, fg_color=FRAME,
                                       command=lambda v: self.q_label.configure(text=str(int(v))))
-        self.q_slider.set(90)
+        self.q_slider.set(95)
         self.q_slider.pack(fill="x", pady=(6, 14))
 
         self.caption(inner, "Halaman (kosong = semua)").pack(anchor="w")
@@ -313,7 +322,7 @@ class App(ctk.CTk):
         try:
             with fitz.open(self.pdfs[0]) as doc:
                 r = doc[0].rect
-                k = int(self.dpi_seg.get()) / 72
+                k = scale_for(r.width, r.height, self.res_seg.get())
                 self.readout.configure(
                     text=f"{len(self.pdfs)} file dipilih\n≈ {round(r.width * k)} × {round(r.height * k)} px per halaman")
         except Exception:
@@ -356,11 +365,11 @@ class App(ctk.CTk):
             return
         self.busy = True
         self.go_btn.configure(state="disabled", text="⏳  Memproses…")
-        args = (list(self.pdfs), out, FORMATS[self.fmt_seg.get()], int(self.dpi_seg.get()),
+        args = (list(self.pdfs), out, FORMATS[self.fmt_seg.get()], self.res_seg.get(),
                 int(self.q_slider.get()), self.pages_entry.get())
         threading.Thread(target=self._pdf_work, args=args, daemon=True).start()
 
-    def _pdf_work(self, files, out, fmt, dpi, quality, pages_text):
+    def _pdf_work(self, files, out, fmt, res, quality, pages_text):
         pil_fmt, ext = fmt
         done = 0
         try:
@@ -376,12 +385,14 @@ class App(ctk.CTk):
                 with fitz.open(f) as doc:
                     for n, idx in enumerate(pages, start=1):
                         page = doc[idx]
-                        zoom = min(dpi / 72.0, MAX_DIM / max(page.rect.width, page.rect.height))
+                        zoom = scale_for(page.rect.width, page.rect.height, res)
                         pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
                         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
                         kw = {"optimize": True} if pil_fmt != "WEBP" else {}
                         if pil_fmt != "PNG":
                             kw["quality"] = quality
+                        if pil_fmt == "JPEG":
+                            kw["subsampling"] = 0  # warna penuh 4:4:4, teks tidak berbayang
                         img.save(os.path.join(dest, f"{stem}_halaman_{n:03d}.{ext}"), pil_fmt, **kw)
                         done += 1
                         self._say(f"Memproses {done} dari {grand}…", done / grand)
