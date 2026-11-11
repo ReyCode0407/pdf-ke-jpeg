@@ -98,7 +98,7 @@ class App(ctk.CTk):
 
         self._build_header()
         self._build_tabs()
-        self._show_tab("PDF → Gambar")
+        self._show_tab("home")
 
     def _set_icon(self):
         try:
@@ -157,30 +157,77 @@ class App(ctk.CTk):
         ctk.CTkLabel(chip, text="DIPROSES DI KOMPUTER · TANPA UNGGAH", font=font(11, mono=True),
                      text_color=MUTED).pack(side="left", padx=(0, 14))
 
+    TOOLS = {
+        "pdf": ("PDF ke Gambar", "Ubah setiap halaman PDF menjadi JPEG, PNG, atau WebP dalam resolusi tinggi."),
+        "img": ("Gambar ke PDF", "Gabungkan beberapa gambar menjadi satu PDF. Urutkan sesuai keinginan."),
+        "doc": ("PDF ke Word", "Ubah PDF menjadi dokumen Word (.docx) yang bisa diedit."),
+    }
+    WORD_C = "#5AA2FF"
+
     def _build_tabs(self):
-        bar = ctk.CTkFrame(self, fg_color="transparent")
-        bar.pack(fill="x", padx=28, pady=(10, 10))
-        self.tab_seg = ctk.CTkSegmentedButton(
-            bar, values=["PDF → Gambar", "Gambar → PDF", "PDF → Word"], command=self._show_tab, height=38, corner_radius=12,
-            fg_color=SURFACE, selected_color=JPG_DEEP, selected_hover_color=JPG_DEEP,
-            unselected_color=SURFACE, unselected_hover_color=FRAME, text_color=FG, font=font(14, "bold"))
-        self.tab_seg.pack(side="left")
+        self.toolbar = ctk.CTkFrame(self, fg_color="transparent")
+        self.btn(self.toolbar, "←  Semua alat", lambda: self._show_tab("home"), width=130).pack(side="left")
+        tt = ctk.CTkFrame(self.toolbar, fg_color="transparent")
+        tt.pack(side="left", padx=18)
+        self.tool_title = self.label(tt, "", 24, FG, "bold", anchor="w")
+        self.tool_title.pack(anchor="w")
+        self.tool_desc = self.label(tt, "", 13, MUTED, anchor="w")
+        self.tool_desc.pack(anchor="w")
 
         self.body = ctk.CTkFrame(self, fg_color="transparent")
         self.body.pack(fill="both", expand=True, padx=28, pady=(0, 22))
+        self.tab_home = ctk.CTkFrame(self.body, fg_color="transparent")
         self.tab_pdf = ctk.CTkFrame(self.body, fg_color="transparent")
         self.tab_img = ctk.CTkFrame(self.body, fg_color="transparent")
         self.tab_doc = ctk.CTkFrame(self.body, fg_color="transparent")
+        self._build_home(self.tab_home)
         self._build_pdf_tab(self.tab_pdf)
         self._build_img_tab(self.tab_img)
         self._build_doc_tab(self.tab_doc)
 
+    def _build_home(self, tab):
+        self.label(tab, "Pilih alat", 24, FG, "bold", anchor="w").pack(anchor="w", pady=(20, 2))
+        self.label(tab, "Semua diproses di komputer Anda. File tidak diunggah ke mana pun.", 13, MUTED,
+                   anchor="w").pack(anchor="w", pady=(0, 18))
+        grid = ctk.CTkFrame(tab, fg_color="transparent")
+        grid.pack(fill="x")
+        for c in range(3):
+            grid.grid_columnconfigure(c, weight=1, uniform="cards")
+        for i, (key, color, glyph) in enumerate([("pdf", PDF_C, "JPG"), ("img", JPG_C, "PDF"), ("doc", self.WORD_C, "W")]):
+            card = self._tool_card(grid, key, color, glyph)
+            card.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 8, 0 if i == 2 else 8))
+
+    def _tool_card(self, parent, key, color, glyph):
+        title, desc = self.TOOLS[key]
+        card = ctk.CTkFrame(parent, fg_color=SURFACE, corner_radius=18, border_width=1, border_color=LINE, cursor="hand2")
+        tile = ctk.CTkFrame(card, width=54, height=54, corner_radius=15, fg_color=color)
+        tile.pack_propagate(False)
+        tile.pack(anchor="w", padx=22, pady=(22, 12))
+        g = ctk.CTkLabel(tile, text=glyph, font=font(14, "bold", mono=True), text_color=DARK)
+        g.place(relx=0.5, rely=0.5, anchor="center")
+        t = self.label(card, title, 18, FG, "bold", anchor="w")
+        t.pack(anchor="w", padx=22)
+        d = self.label(card, desc, 13, MUTED, anchor="w", justify="left", wraplength=250)
+        d.pack(anchor="w", padx=22, pady=(4, 22))
+        widgets = [card, tile, g, t, d]
+        for w in widgets:
+            w.bind("<Button-1>", lambda _e, k=key: self._show_tab(k))
+            w.bind("<Enter>", lambda _e, c=card, col=color: c.configure(border_color=col, fg_color=FRAME))
+            w.bind("<Leave>", lambda _e, c=card: c.configure(border_color=LINE, fg_color=SURFACE))
+        return card
+
     def _show_tab(self, name):
-        self.tab_seg.set(name)
-        for t in (self.tab_pdf, self.tab_img, self.tab_doc):
+        for t in (self.tab_home, self.tab_pdf, self.tab_img, self.tab_doc):
             t.pack_forget()
-        {"PDF → Gambar": self.tab_pdf, "Gambar → PDF": self.tab_img, "PDF → Word": self.tab_doc}[name].pack(
-            fill="both", expand=True)
+        self.toolbar.pack_forget()
+        if name == "home":
+            self.tab_home.pack(fill="both", expand=True)
+            return
+        title, desc = self.TOOLS[name]
+        self.tool_title.configure(text=title)
+        self.tool_desc.configure(text=desc)
+        self.toolbar.pack(fill="x", padx=28, pady=(8, 12), before=self.body)
+        {"pdf": self.tab_pdf, "img": self.tab_img, "doc": self.tab_doc}[name].pack(fill="both", expand=True)
 
     # ------------------------------------------------------------ tab 1: PDF -> Gambar
     def _build_pdf_tab(self, tab):

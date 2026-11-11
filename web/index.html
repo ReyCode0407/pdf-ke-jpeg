@@ -9,7 +9,7 @@
    Color story: orange = the PDF side, teal = the JPEG side, joined by a gradient wherever something converts. */
 :root{
   --bg:#F1F4F8; --surface:#FFFFFF; --fg:#0E1620; --muted:#556473; --line:#D6DDE6; --frame:#E4E9F0;
-  --pdf:#D9400F; --jpg:#0A8A81; --grad:linear-gradient(100deg,#D9400F 0%,#0A8A81 100%); --on-grad:#FFFFFF;
+  --pdf:#D9400F; --jpg:#0A8A81; --word:#2B6CB0; --grad:linear-gradient(100deg,#D9400F 0%,#0A8A81 100%); --on-grad:#FFFFFF;
   --accent:var(--jpg); --accent-soft:#DCF1EF; --danger:#B3261E;
   --glow1:rgba(217,64,15,.16); --glow2:rgba(10,138,129,.18);
   --shadow:0 1px 2px rgba(14,22,32,.06),0 14px 36px rgba(14,22,32,.08);
@@ -19,12 +19,12 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#080D12; --surface:#111A22; --fg:#E8EFF4; --muted:#8DA0AE; --line:#223039; --frame:#192630;
-  --pdf:#FF6B3D; --jpg:#34D9C5; --grad:linear-gradient(100deg,#FF6B3D 0%,#34D9C5 100%); --on-grad:#06110F;
+  --pdf:#FF6B3D; --jpg:#34D9C5; --word:#5AA2FF; --grad:linear-gradient(100deg,#FF6B3D 0%,#34D9C5 100%); --on-grad:#06110F;
   --accent-soft:#0F2E2B; --danger:#FF8A80; --glow1:rgba(255,107,61,.20); --glow2:rgba(52,217,197,.16);
   --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 36px rgba(0,0,0,.4); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#080D12; --surface:#111A22; --fg:#E8EFF4; --muted:#8DA0AE; --line:#223039; --frame:#192630;
-  --pdf:#FF6B3D; --jpg:#34D9C5; --grad:linear-gradient(100deg,#FF6B3D 0%,#34D9C5 100%); --on-grad:#06110F;
+  --pdf:#FF6B3D; --jpg:#34D9C5; --word:#5AA2FF; --grad:linear-gradient(100deg,#FF6B3D 0%,#34D9C5 100%); --on-grad:#06110F;
   --accent-soft:#0F2E2B; --danger:#FF8A80; --glow1:rgba(255,107,61,.20); --glow2:rgba(52,217,197,.16);
   --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 36px rgba(0,0,0,.4); color-scheme:dark}
 
@@ -170,6 +170,35 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
 .shot img{width:100%;border-radius:6px;display:block;background:#fff}
 .shot b{font:500 12px var(--font-mono);overflow-wrap:anywhere}
 .note{font-size:13px;color:var(--muted);margin:10px 0 0}
+
+/* gaya ala iLovePDF: beranda kartu alat, halaman alat dengan tombol pilih file besar */
+.view-tool .hero{display:none}
+h1{gap:0}
+.home-h{font:800 clamp(26px,4vw,34px)/1.1 var(--font-display);letter-spacing:-.03em;margin:8px 0 6px}
+.home-p{color:var(--muted);margin:0 0 20px}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.tool{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.tool:hover{transform:translateY(-4px);border-color:var(--c)}
+.tool .ti{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:15px;background:var(--c);color:var(--on-grad);font:700 15px var(--font-mono);margin-bottom:6px}
+.tool b{font:700 19px var(--font-display);letter-spacing:-.01em}
+.tool .td2{color:var(--muted);font-size:14px}
+.toolhead{position:relative;text-align:center;margin:4px 0 28px}
+.toolhead .back{position:absolute;left:0;top:0}
+.tinner{max-width:640px;margin:0 auto}
+.tt{font:800 clamp(30px,5vw,46px)/1.05 var(--font-display);letter-spacing:-.035em;margin:0 0 8px;text-wrap:balance}
+.td{color:var(--muted);margin:0;font-size:16px}
+@media (max-width:900px){.toolhead .back{position:static;margin-bottom:14px}}
+#wsPdf{--tc:var(--pdf)} #wsImg{--tc:var(--jpg)} #wsDoc{--tc:var(--word)}
+.pick-btn{display:inline-flex;align-items:center;justify-content:center;background:var(--tc,var(--jpg));color:var(--on-grad);font:700 20px var(--font-display);padding:18px 46px;border-radius:16px;box-shadow:0 10px 26px color-mix(in srgb,var(--tc,var(--jpg)) 32%,transparent);transition:transform .15s,filter .15s}
+.drop:hover .pick-btn{transform:translateY(-2px);filter:brightness(1.06)}
+.drop strong{font:500 15px var(--font-body);letter-spacing:0;color:var(--muted)}
+.drop.compact strong{font:700 16px var(--font-display);color:var(--fg)}
+.drop:not(.compact){padding:64px 20px;gap:14px}
+.drop:not(.compact) .drop-ic{display:none}
+.drop.compact .pick-btn{display:none}
+.workspace .btn.primary.convert{background:var(--tc)}
+.workspace .rail::before{background:var(--tc)}
+.workspace .seg button[aria-pressed="true"]{background:var(--tc)}
 </style>
 </head><body>
 
@@ -177,7 +206,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
 
 <div class="wrap">
   <header class="nav">
-    <div class="brand">
+    <div class="brand" id="brandHome" role="link" tabindex="0" style="cursor:pointer">
       <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--pdf)"/><stop offset="1" style="stop-color:var(--jpg)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M11 8h7l4 4v12H11z" fill="none" stroke="var(--on-grad)" stroke-width="2" stroke-linejoin="round"/><path d="M14 19l2-2 2 2 2-3" fill="none" stroke="var(--on-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span>PIXORA <small class="by">by Rey</small></span>
     </div>
@@ -187,8 +216,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   <section class="hero">
     <div>
       <h1><span class="p">PIX</span><span class="j">ORA</span><span class="by">by Rey</span></h1>
-      <p class="lead">Aplikasi pengolah PDF dan gambar. Ubah halaman PDF jadi gambar yang tajam, atau gabungkan beberapa gambar jadi satu PDF. Semua diproses di perangkat Anda.</p>
-      <ul class="chips"><li>PDF → Gambar</li><li>Gambar → PDF</li><li>PDF → Word</li><li>Full HD sampai 4K</li><li>JPEG · PNG · WebP</li></ul>
+      <p class="lead">Aplikasi pengolah PDF dan gambar. Semua alat yang Anda butuhkan di satu tempat, gratis, tanpa daftar, dan langsung di browser.</p>
     </div>
     <svg class="art" viewBox="0 0 380 300" role="img" aria-label="Halaman PDF berubah menjadi gambar JPEG">
       <defs><clipPath id="clipL"><rect x="24" y="52" width="140" height="190" rx="10"/></clipPath></defs>
@@ -220,15 +248,29 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     </svg>
   </section>
 
-  <div class="tabs" role="group" aria-label="Pilih alat"><button type="button" class="tab" id="tabPdf" aria-pressed="true">PDF → Gambar</button><button type="button" class="tab" id="tabImg" aria-pressed="false">Gambar → PDF</button><button type="button" class="tab" id="tabDoc" aria-pressed="false">PDF → Word</button></div>
+  <section id="home">
+    <h2 class="home-h">Pilih alat</h2>
+    <p class="home-p">Semua diproses di browser Anda. File tidak diunggah ke mana pun.</p>
+    <div class="tools">
+      <button type="button" class="tool" data-tool="pdf" style="--c:var(--pdf)"><span class="ti">JPG</span><b>PDF ke Gambar</b><span class="td2">Ubah halaman PDF jadi JPEG, PNG, atau WebP. Resolusi Full HD sampai 4K.</span></button>
+      <button type="button" class="tool" data-tool="img" style="--c:var(--jpg)"><span class="ti">PDF</span><b>Gambar ke PDF</b><span class="td2">Gabungkan beberapa gambar jadi satu PDF dengan urutan yang Anda atur.</span></button>
+      <button type="button" class="tool" data-tool="doc" style="--c:var(--word)"><span class="ti">W</span><b>PDF ke Word</b><span class="td2">Ambil teks PDF jadi dokumen Word (.docx) yang bisa diedit.</span></button>
+    </div>
+  </section>
+
+  <div class="toolhead" id="toolhead" hidden>
+    <button type="button" class="btn back" id="backHome">← Semua alat</button>
+    <div class="tinner"><h2 class="tt" id="toolTitle"></h2><p class="td" id="toolDesc"></p></div>
+  </div>
 
   <div class="workspace" id="wsPdf">
     <div class="main">
       <label class="drop" id="drop">
         <input type="file" id="pick" accept="application/pdf,.pdf" multiple>
         <span class="drop-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
-        <strong>Seret PDF ke sini</strong>
-        <small>atau klik untuk memilih file. Bisa lebih dari satu.</small>
+        <span class="pick-btn">Pilih file PDF</span>
+        <strong>atau seret PDF ke sini</strong>
+        <small>Bisa memilih lebih dari satu file.</small>
         <button type="button" class="btn" id="sample">Coba dengan PDF contoh</button>
       </label>
       <div id="files" class="main"></div>
@@ -270,8 +312,9 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       <label class="drop" id="dropImg">
         <input type="file" id="pickImg" accept="image/*" multiple>
         <span class="drop-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
-        <strong>Seret gambar ke sini</strong>
-        <small>atau klik untuk memilih. JPG, PNG, atau WebP, bisa banyak sekaligus.</small>
+        <span class="pick-btn">Pilih gambar</span>
+        <strong>atau seret gambar ke sini</strong>
+        <small>JPG, PNG, atau WebP. Bisa banyak sekaligus.</small>
       </label>
       <section class="file" id="imgBox" hidden>
         <div class="file-h"><div class="file-t"><h2>Gambar</h2><p class="mono" id="imgMeta"></p></div>
@@ -293,8 +336,9 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
       <label class="drop" id="dropDoc">
         <input type="file" id="pickDoc" accept="application/pdf,.pdf" multiple>
         <span class="drop-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
-        <strong>Seret PDF ke sini</strong>
-        <small>atau klik untuk memilih file. Hasilnya dokumen Word (.docx) yang bisa diedit.</small>
+        <span class="pick-btn">Pilih file PDF</span>
+        <strong>atau seret PDF ke sini</strong>
+        <small>Hasilnya dokumen Word (.docx) yang bisa diedit.</small>
       </label>
       <section class="file" id="docBox" hidden>
         <div class="file-h"><div class="file-t"><h2>File PDF</h2><p class="mono" id="docMeta"></p></div>
@@ -383,6 +427,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   window.addEventListener('drop', e => {
     e.preventDefault();
     const fl = [...e.dataTransfer.files];
+    if (state.tab === 'home') return;
     if (state.tab === 'img') { if (!$('#dropImg').contains(e.target)) addImgs(fl); }
     else if (state.tab === 'doc') { if (!$('#dropDoc').contains(e.target)) addDocs(fl); }
     else if (!drop.contains(e.target)) addFiles(fl);
@@ -470,7 +515,7 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
     });
     drop.classList.toggle('compact', state.files.length > 0);
     updateHero();
-    drop.querySelector('strong').textContent = state.files.length ? 'Tambah PDF lain' : 'Seret PDF ke sini';
+    drop.querySelector('strong').textContent = state.files.length ? 'Tambah PDF lain' : 'atau seret PDF ke sini';
     drop.querySelector('small').hidden = state.files.length > 0;
     $('#sample').hidden = state.files.length > 0;
     refresh();
@@ -619,15 +664,26 @@ input[type=range]{width:100%;accent-color:var(--jpg)}
   });
 
   /* ---------- tab ---------- */
+  const TOOLS = {
+    pdf: ['PDF ke Gambar', 'Ubah setiap halaman PDF menjadi gambar JPEG, PNG, atau WebP dalam resolusi tinggi.'],
+    img: ['Gambar ke PDF', 'Gabungkan beberapa gambar menjadi satu file PDF. Urutkan sesuai keinginan.'],
+    doc: ['PDF ke Word', 'Ubah PDF menjadi dokumen Word (.docx) yang bisa diedit.']
+  };
   function setTab(t){
     state.tab = t;
+    const home = t === 'home';
+    document.body.classList.toggle('view-tool', !home);
+    $('#home').hidden = !home; $('#toolhead').hidden = home;
     $('#wsPdf').hidden = t !== 'pdf'; $('#wsImg').hidden = t !== 'img'; $('#wsDoc').hidden = t !== 'doc';
-    $('#tabPdf').setAttribute('aria-pressed', t === 'pdf'); $('#tabImg').setAttribute('aria-pressed', t === 'img'); $('#tabDoc').setAttribute('aria-pressed', t === 'doc');
+    if (!home){ $('#toolTitle').textContent = TOOLS[t][0]; $('#toolDesc').textContent = TOOLS[t][1]; }
     say('');
+    window.scrollTo(0, 0);
   }
-  $('#tabPdf').addEventListener('click', () => setTab('pdf'));
-  $('#tabImg').addEventListener('click', () => setTab('img'));
-  $('#tabDoc').addEventListener('click', () => setTab('doc'));
+  document.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tool)));
+  $('#backHome').addEventListener('click', () => setTab('home'));
+  $('#brandHome').addEventListener('click', () => setTab('home'));
+  $('#brandHome').addEventListener('keydown', e => { if (e.key === 'Enter') setTab('home'); });
+  setTab('home');
 
   /* ---------- Gambar -> PDF ---------- */
   function addImgs(list){
